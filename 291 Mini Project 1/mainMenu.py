@@ -1,5 +1,5 @@
 import sys
-import cx_oracle as cx
+import cx_Oracle as cx
 
 def dbInfo():
 	
@@ -8,7 +8,7 @@ def dbInfo():
 	dbpass = str(input("Please input Oracle db password: ")).strip()
 	
 	# create a string for database connection
-	constr = str(dbusr + "/" + dbpass + "@gwynne.cs.ualberta.ca:1521:CRS")	
+	constr = str(dbusr + "/" + dbpass + "@gwynne.cs.ualberta.ca:1521/CRS")	
 	
 	return constr
 
