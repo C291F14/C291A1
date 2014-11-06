@@ -1,11 +1,17 @@
 import sys
 import cx_Oracle as cx
+from getpass import *
+from patientInfo import * 
+
+# Main menu for healthcare database written by Cody Ingram
 
 def dbInfo():
 	
 	# User imputs Oracle username/password
 	dbusr = str(input("Please input Oracle db username: ")).strip()
-	dbpass = str(input("Please input Oracle db password: ")).strip()
+	if not user:
+    	user=getpass.getuser()
+	dbpass = getpass()
 	
 	# create a string for database connection
 	constr = str(dbusr + "/" + dbpass + "@gwynne.cs.ualberta.ca:1521/CRS")	
@@ -15,7 +21,7 @@ def dbInfo():
 def menuOption():
 	
 	# choose menu option
-	menuChoice = str(input("Please Select An Option:\n 1 - Perscription\n 2 - Medical Test\n 3 - Patient Information Update\n 4 - Search Engine\n 5 - Exit"))
+	menuChoice = str(input("Please Select An Option:\n 1 - Perscription\n 2 - Medical Test\n 3 - Patient Information Update\n 4 - Search Engine\n 5 - Exit\n"))
 	
 	if menuChoice == "1":
 		print("# call perscription")
@@ -24,12 +30,13 @@ def menuOption():
 		print("# call Medical Test")
 		return True
 	elif menuChoice == "3":
-		print("# call Patient Info")
+		updateInfo(con)
 		return True
 	elif menuChoice == "4":
 		print("# call search engine")
 		return True
 	elif menuChoice == "5":
+		con.close()
 		sys.exit()
 	else:
 		return False
@@ -42,7 +49,7 @@ def main():
 		constr = dbInfo()
 	
 		try:
-			cx.connect(constr)
+			con = cx.connect(constr)
 			break
 		
 		except cx.DatabaseError as exc:
@@ -51,10 +58,11 @@ def main():
 			print( sys.stderr, "Oracle message:", error.message)
 			
 			while True:
-				opt = input("Press 1 to try again, press 2 to exit")
+				opt = input("Press 1 to try again, press 2 to exit\n")
 				if opt == "1":
 					break
 				elif opt == "2":
+					con.close()
 					sys.exit()
 				else:
 					Print("Invalid input")
