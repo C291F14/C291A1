@@ -9,8 +9,7 @@ def dbInfo():
 	
 	# User imputs Oracle username/password
 	dbusr = str(input("Please input Oracle db username: ")).strip()
-	if not user:
-    	user=getpass.getuser()
+
 	dbpass = getpass()
 	
 	# create a string for database connection
@@ -18,7 +17,7 @@ def dbInfo():
 	
 	return constr
 
-def menuOption():
+def menuOption(con):
 	
 	# choose menu option
 	menuChoice = str(input("Please Select An Option:\n 1 - Perscription\n 2 - Medical Test\n 3 - Patient Information Update\n 4 - Search Engine\n 5 - Exit\n"))
@@ -53,7 +52,7 @@ def main():
 			break
 		
 		except cx.DatabaseError as exc:
-			error = exc.args
+			error, = exc.args
 			print( sys.stderr, "Oracle code:", error.code)
 			print( sys.stderr, "Oracle message:", error.message)
 			
@@ -62,18 +61,18 @@ def main():
 				if opt == "1":
 					break
 				elif opt == "2":
-					con.close()
 					sys.exit()
 				else:
 					Print("Invalid input")
 			
-	# main menu starts, give options for applications	
+	# main menu starts, give options for applications
+	print()	
 	print("Welcome to the best database application ever!")
 	
 	while True:
-		opt2 = menuOption()
+		opt2 = menuOption(con)
 		while opt2 == False:
 			print("Invalid Input")
-			opt2 = menuOption()
+			opt2 = menuOption(con)
 
 main()
