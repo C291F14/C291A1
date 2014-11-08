@@ -255,7 +255,7 @@ def addPatient(con):
 
 				a = input("Press 1 to finish, Press 2 to update")
 				if a == "1":
-					continue
+					return
 				elif a == "2":
 					updatePatient(con)
 				else:
