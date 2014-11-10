@@ -5,7 +5,7 @@ import sys
 def testChange(con, HCno):
 	# change allowed tests
 	while True:
-		opt = str(input("Please select an option:\n 1 - Restrict test\n 2 - Unrestrict test\n 3 - Back"))
+		opt = str(input("Please select an option:\n 1 - Restrict test\n 2 - Unrestrict test\n 3 - Back\n"))
 
 		if opt == "1":
 			#add a new dissallowed test
@@ -13,7 +13,12 @@ def testChange(con, HCno):
 			while True:
 				print()
 
-				typeid = int(input("Please enter type id of test to restrict:\n"))
+				typeid = input("Please enter type id of test to restrict:\n")
+				try:
+					int(typeid)
+				except:
+					print("Invalid Input")
+					break
 
 				curs = con.cursor()
 				query = """INSERT INTO not_allowed VALUES (:HC, :id)"""
@@ -21,7 +26,6 @@ def testChange(con, HCno):
 				try:
 					curs.execute(query, {'HC': HCno, 'id': typeid})
 					con.commit()
-					curs.close()
 					break
 				except cx.DatabaseError as exc:
 					error, = exc.args
@@ -100,7 +104,12 @@ def updatePatient(con):
 			return
 		else:
 			#check existence of HCno
-			HCno = int(HCno)
+			try: 
+				int(HCno)
+			except:
+				print("Invalid healthcare #")
+				break
+
 			query = """SELECT * from patient where health_care_no = :HC"""
 			try:
 				curs.execute(query, {'HC': HCno})
@@ -212,13 +221,18 @@ def addPatient(con):
 
 	while True:
 		print()
-		HCno = str(input("Please enter healthcare #, or B to return: ")).strip().lower()
+		HCno = str(input("Please enter healthcare # of new patient, or B to return: ")).strip().lower()
 		if HCno == "b":
 			curs.close()
 			return
 		else:
 			#check existence of HCno
-			HCno = int(HCno)
+			try: 
+				int(HCno)
+			except:
+				print("Invalid healthcare #")
+				break
+
 			query = """SELECT * from patient where health_care_no = :HC"""
 			try:
 				curs.execute(query, {'HC': HCno})
