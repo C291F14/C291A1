@@ -38,11 +38,30 @@ def testResult(con):
 				print("Patient doesn't exists, please try again")
 				continue
 			while True:
-				eNo = str(input("Please enter employee number of doctor, or B to return: ")).strip().lower()
-				if eNo == "b":
+				docName = str(input("Please enter name of doctor, or B to return: ")).strip()
+				if docName == "b":
 					curs.close()
 					return
 				else:
+					# get doc eNo from name
+					query = """SELECT doctor.employee_no FROM patient, doctor WHERE doctor.health_care_no = patient.health_care_no AND patient.name = :name"""
+
+					try:
+						curs.execute(query, {'name': docName})
+					except cx.DatabaseError as exc:
+						error, = exc.args
+						print( sys.stderr, "Oracle code:", error.code)
+						print( sys.stderr, "Oracle message:", error.message)
+						curs.close()
+						return
+
+					rows = curs.fetchall()
+					if len(rows) < 1:
+						print("Doctor doesnt exist, please try again")
+						continue
+
+					eNo = rows[0][0]
+
 					try:
 						int(eNo)
 					except:
@@ -81,6 +100,21 @@ def testResult(con):
 						return
 
 					while True:
+
+						query = """SELECT test_id FROM test_record WHERE patient_no = :pno AND employee_no = :eno"""
+						try:
+							curs.execute(query, {'pno': HCno, 'eno': eNo})
+						except cx.DatabaseError as exc:
+							error, = exc.args
+							print( sys.stderr, "Oracle code:", error.code)
+							print( sys.stderr, "Oracle message:", error.message)
+							curs.close()
+							return
+
+						rows = curs.fetchall()
+						for row in rows:
+							print("Test ID's Prescribed by " + docName + "to" + str(HCno) + ":")
+							print(row[0])
 
 						test_id = input("Please enter test id of the test you wish to update, or B to exit: ").strip().lower()
 						if test_id == "b":
