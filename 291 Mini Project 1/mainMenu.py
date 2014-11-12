@@ -2,6 +2,7 @@ import sys
 import cx_Oracle as cx
 from getpass import *
 from patientInfo import * 
+from searchEngine import *
 
 # Main menu for healthcare database written by Cody Ingram
 
@@ -30,7 +31,7 @@ def menuOption():
 		print("# call Medical Test")
 		return True
 	elif menuChoice == "3":
-		updateInfo(con)
+		updateInfo(con) #updatePatientInfo
 		return True
 	elif menuChoice == "4":
 		print("# call search engine")

@@ -1,0 +1,164 @@
+# Search Engine by Aaron Tse
+
+def searchByPatient(con):
+
+	curs = con.cursor()
+
+	while True:
+		menuChoice = str(input("Please select an option:\n 1 - Enter Patient Health Care Number\n 2 - Enter Patient Name\n 3 - Exit to Main Menu\n"))
+
+		if menuChoice == "1":
+			patientType = "health_care_no"
+		elif menuChoice == "2":
+			patientType = "patient_name"
+		elif menuChoice == "3":
+			curs.close()
+			return
+		else:
+			print("Invalid Input, Please Try Again")
+			continue
+
+		if patientType == "health_care_no":
+			identifier = str(input("Enter Patient Health Care Number"))
+			try:
+				curs.execute("SELECT p.health_care_no, p.name, t.test_name, r.test_date, r.result FROM patient p, test_record r, test_type t WHERE p.health_care_no = :identifier AND p.health_care_no = r.patient_no AND t.type_id = r.type_id", {"identifier": identifier})
+			except cx.DatabaseError as exc:
+				error, = exc.args
+				print( sys.stderr, "Oracle code:", error.code)
+				print( sys.stderr, "Oracle message:", error.message):
+
+		elif patientType == "patientName":
+			identifier = str(input("Enter Patient Name"))
+			try:
+				curs.execute("SELECT p.health_care_no, p.name, t.test_name, r.test_date, r.result FROM patient p, test_record r, test_type t WHERE p.name = :identifier AND p.health_care_no = r.patient_no AND t.type_id = r.type_id", {"identifier": identifier})
+			except cx.DatabaseError as exc:
+				error, = exc.args
+				print( sys.stderr, "Oracle code:", error.code)
+				print( sys.stderr, "Oracle message:", error.message):
+
+		rows = curs.fetchall()
+		if len(rows) < 1:
+			print("No information available for patient ", identifier)
+		else:
+			for i in rows:
+				print(i)
+
+def searchByDoctor(con):
+
+	curs = con.cursor()
+
+	while True:
+
+		menuChoice = str(input("Please select an option:\n 1 - Enter Doctor Employee Number\n 2 - Enter Doctor Name\n 3 - Exit to Main Menu\n"))
+
+		if menuChoice == "1":
+			searchType = "employee_no"
+		elif menuChoice == "2":
+			searchType = "doctor_name"
+		elif menuChoice == "3":
+			curs.close()
+			return
+		else:
+			print("Invalid Input, Please Try Again")
+
+		if searchType == "employee_no":
+			identifier = str(input("Enter Doctor Employee Number"))
+			try:
+				curs.execute("SELECT p.health_care_no, p.name, t.test_name, r.prescribe_date FROM patient p, test_type t, test_record r, doctor d WHERE r.employee_no = d.employee_no AND d.employee_no = :identifier AND p.health_care_no = r.patient_no AND t.type_id = r.type_id AND r.prescribe_date <= :endDate AND r.prescribe_date >= :startDate", {"endDate": endDate, "startDate" : startDate, "identifier": identifier})
+			except cx.DatabaseError as exc:
+				error, = exc.args
+				print( sys.stderr, "Oracle code:", error.code)
+				print( sys.stderr, "Oracle message:", error.message):
+		elif searchType == "doctor_name":
+			identifier = str(input("Enter Doctor Name"))
+			try:
+				curs.execute("SELECT p.health_care_no, p.name, t.test_name, r.prescribe_date FROM patient p1, patient p2, test_type t, test_record r, doctor d WHERE r.employee_no = d.employee_no AND d.health_care_no = p2.health_care_no AND p2.name = :identifier AND p1.health_care_no = r.patient_no AND t.type_id = r.type_id AND r.prescribe_date <= :endDate AND r.prescribe_date >= :startDate", {"endDate": endDate, "startDate" : startDate, "identifier": identifier})
+			except cx.DatabaseError as exc:
+				error, = exc.args
+				print( sys.stderr, "Oracle code:", error.code)
+				print( sys.stderr, "Oracle message:", error.message):
+
+		while True:
+
+			startDate = str(input("Enter a Start Date (YYYY-MM-DD): ")).strip()
+			if len(startDate) != 10 or startDate[4] != '-' or startDate[4] != '-':
+				print("Invalid Date")
+			else:
+				break
+
+		while True:
+
+			endDate = str(input("Enter an End Date (YYYY-MM-DD): ")).strip()
+			if len(endDate) != 10 or endDate[4] != '-' or endDate[7] != '-':
+				print("Invalid Date")
+			else:
+				break
+
+		rows = curs.fetchall()
+		if len(rows) < 1:
+			print("No information available for Doctor " + " between " + startDate " and " + endDate)
+		else:
+			for i in rows:
+				print(i)
+
+def searchAlarmingAge(con):
+
+	curs = con.cursor()
+
+#Display the health_care_no, name, address, and phone number of all patients, 
+#who have reached the alarming age of the given test type but have never taken a test of that type by requesting the test type name.
+
+	try:
+		curs.execute("DROP VIEW 	medical_risk;\
+CREATE VIEW	medical_risk(medical_type, abnormal_rate, alarming_age) AS\
+SELECT 		m1.type_id, ab_rate, min(m1.age)\
+FROM		(SELECT 	t1.type_id, COUNT(DISTINCT t1.patient_no)/COUNT(DISTINCT t2.patient_no) AS ab_rate\
+			FROM		test_record t1, test_record t2\
+			WHERE		t1.result <> 'normal'\
+						AND t1.type_id = t2.type_id\
+			GROUP BY	t1.type_id) rate,\
+			(SELECT		t.type_id, age, COUNT(DISTINCT p.health_care_no) AS abnormal\
+			FROM		test_record t, patient p, (SELECT DISTINCT floor(abs(sysdate-p.birth_day)/365) AS age FROM patient p)\
+			WHERE		floor(abs(sysdate-p.birth_day)/365) >= age\
+						AND t.patient_no = p.health_care_no\
+						AND t.result <> 'normal'\
+			GROUP BY 	age, t.type_id) m1,\
+			(SELECT		t.type_id, age, COUNT(DISTINCT p.health_care_no) AS total\
+			FROM		test_record t, patient p, (SELECT DISTINCT floor(abs(sysdate-p.birth_day)/365) AS age FROM patient p)\
+			WHERE		floor(abs(sysdate-p.birth_day)/365) >= age\
+						AND t.patient_no = p.health_care_no\
+			GROUP BY 	age, t.type_id) m2 \
+WHERE		m1.age = m2.age\
+			AND m1.type_id = m2.type_id\
+			AND m1.type_id = rate.type_id\
+			AND m1.abnormal/m2.total >= 2*rate.ab_rate\
+GROUP BY 	m1.type_id, rate.ab_rate;")
+		curs.execute("SELECT p.health_care_no, p.name, p.address, p.phone FROM test_type t, medical_risk m, patient p,(SELECT DISTINCT trunc(months_between(sysdate, p.birth_day)/12) AS age FROM patient p) where age >= m.alarming_age AND m.medical_type = t.type_id")
+	except cx.DatabaseError as exc:
+		error, = exc.args
+		print( sys.stderr, "Oracle code:", error.code)
+		print( sys.stderr, "Oracle message:", error.message):
+
+	rows = curs.fetchall()
+	if len(rows) < 1:
+		print("No information available for Doctor " + " between " + startDate " and " + endDate)
+	else:
+		for i in rows:
+			print(i)
+
+def searchEngine(con):
+
+	while True:
+
+		menuChoice = str(input("Please select an option:\n 1 - Find Patient\n 2 - Find Patients of Doctor\n 3 - Find Patients by Alarming Age\n 4 - Exit to Main Menu\n")).strip()
+
+		if menuChoice == "1":
+			searchByPatient(con)
+		elif menuChoice == "2":
+			searchByDoctor(con)
+		elif menuChoice == "3":
+			searchAlarmingAge(con)
+		elif menuChoice == "4":
+			return
+		else:
+			print("Invalid Input, Please Try Again")
