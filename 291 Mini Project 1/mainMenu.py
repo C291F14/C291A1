@@ -1,8 +1,13 @@
 import sys
 import cx_Oracle as cx
 from getpass import *
+<<<<<<< HEAD
+from patientInfo import * 
+from searchEngine import *
+=======
 import patientInfo
 import medicalTest
+>>>>>>> 68ecd6890b58b55074aee66e5d0dfb24df3575f1
 
 # Main menu for healthcare database written by Cody Ingram
 
@@ -30,7 +35,11 @@ def menuOption(con):
 		medicalTest.testResult(con)
 		return True
 	elif menuChoice == "3":
+<<<<<<< HEAD
+		updateInfo(con) #updatePatientInfo
+=======
 		patientInfo.updateInfo(con)
+>>>>>>> 68ecd6890b58b55074aee66e5d0dfb24df3575f1
 		return True
 	elif menuChoice == "4":
 		print("# call search engine")
