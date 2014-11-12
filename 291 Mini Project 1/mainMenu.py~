@@ -1,9 +1,9 @@
 import sys
 import cx_Oracle as cx
 from getpass import *
-import patientInfo
+from patientInfo import * 
 import searchEngine
-import medicalTest
+from medicalTest import *
 import prescription
 
 

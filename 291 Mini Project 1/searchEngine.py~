@@ -141,7 +141,7 @@ GROUP BY 	m1.type_id, rate.ab_rate;")
 
 	rows = curs.fetchall()
 	if len(rows) < 1:
-		print("No information available for Doctor " + " between " + startDate +" and " + endDate)
+		print("No information available for Doctor " + " between " + startDate " and " + endDate)
 	else:
 		for i in rows:
 			print(i)

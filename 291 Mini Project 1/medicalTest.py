@@ -101,7 +101,7 @@ def testResult(con):
 
 					while True:
 
-						query = """SELECT test_id FROM test_record WHERE patient_no = :pno AND employee_no = :eno"""
+						query = """SELECT test_id, type_id, prescribe_date FROM test_record WHERE patient_no = :pno AND employee_no = :eno"""
 						try:
 							curs.execute(query, {'pno': HCno, 'eno': eNo})
 						except cx.DatabaseError as exc:
@@ -112,11 +112,12 @@ def testResult(con):
 							return
 
 						rows = curs.fetchall()
+						print()
 						for row in rows:
-							print("Test ID's Prescribed by " + docName + "to" + str(HCno) + ":")
-							print(row[0])
+							print("Tests Prescribed by " + docName + " to patient " + str(HCno) + ":")
+							print("Test ID:", row[0], "Test Type:", row[1])
 
-						test_id = input("Please enter test id of the test you wish to update, or B to exit: ").strip().lower()
+						test_id = input("Please enter Test ID of the test you wish to update, or B to exit: ").strip().lower()
 						if test_id == "b":
 							curs.close()
 							return
