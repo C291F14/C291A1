@@ -25,7 +25,7 @@ def searchByPatient(con):
 			except cx.DatabaseError as exc:
 				error, = exc.args
 				print( sys.stderr, "Oracle code:", error.code)
-				print( sys.stderr, "Oracle message:", error.message):
+				print( sys.stderr, "Oracle message:", error.message)
 
 		elif patientType == "patientName":
 			identifier = str(input("Enter Patient Name"))
@@ -68,7 +68,7 @@ def searchByDoctor(con):
 			except cx.DatabaseError as exc:
 				error, = exc.args
 				print( sys.stderr, "Oracle code:", error.code)
-				print( sys.stderr, "Oracle message:", error.message):
+				print( sys.stderr, "Oracle message:", error.message)
 		elif searchType == "doctor_name":
 			identifier = str(input("Enter Doctor Name"))
 			try:
@@ -76,7 +76,7 @@ def searchByDoctor(con):
 			except cx.DatabaseError as exc:
 				error, = exc.args
 				print( sys.stderr, "Oracle code:", error.code)
-				print( sys.stderr, "Oracle message:", error.message):
+				print( sys.stderr, "Oracle message:", error.message)
 
 		while True:
 
@@ -96,7 +96,7 @@ def searchByDoctor(con):
 
 		rows = curs.fetchall()
 		if len(rows) < 1:
-			print("No information available for Doctor " + " between " + startDate " and " + endDate)
+			print("No information available for Doctor " + " between " + startDate + " and " + endDate)
 		else:
 			for i in rows:
 				print(i)
@@ -105,46 +105,52 @@ def searchAlarmingAge(con):
 
 	curs = con.cursor()
 
-#Display the health_care_no, name, address, and phone number of all patients, 
-#who have reached the alarming age of the given test type but have never taken a test of that type by requesting the test type name.
+	while True:
 
-	try:
-		curs.execute("DROP VIEW 	medical_risk;\
-CREATE VIEW	medical_risk(medical_type, abnormal_rate, alarming_age) AS\
-SELECT 		m1.type_id, ab_rate, min(m1.age)\
-FROM		(SELECT 	t1.type_id, COUNT(DISTINCT t1.patient_no)/COUNT(DISTINCT t2.patient_no) AS ab_rate\
-			FROM		test_record t1, test_record t2\
-			WHERE		t1.result <> 'normal'\
-						AND t1.type_id = t2.type_id\
-			GROUP BY	t1.type_id) rate,\
-			(SELECT		t.type_id, age, COUNT(DISTINCT p.health_care_no) AS abnormal\
-			FROM		test_record t, patient p, (SELECT DISTINCT floor(abs(sysdate-p.birth_day)/365) AS age FROM patient p)\
-			WHERE		floor(abs(sysdate-p.birth_day)/365) >= age\
-						AND t.patient_no = p.health_care_no\
-						AND t.result <> 'normal'\
-			GROUP BY 	age, t.type_id) m1,\
-			(SELECT		t.type_id, age, COUNT(DISTINCT p.health_care_no) AS total\
-			FROM		test_record t, patient p, (SELECT DISTINCT floor(abs(sysdate-p.birth_day)/365) AS age FROM patient p)\
-			WHERE		floor(abs(sysdate-p.birth_day)/365) >= age\
-						AND t.patient_no = p.health_care_no\
-			GROUP BY 	age, t.type_id) m2 \
-WHERE		m1.age = m2.age\
-			AND m1.type_id = m2.type_id\
-			AND m1.type_id = rate.type_id\
-			AND m1.abnormal/m2.total >= 2*rate.ab_rate\
-GROUP BY 	m1.type_id, rate.ab_rate;")
-		curs.execute("SELECT p.health_care_no, p.name, p.address, p.phone FROM test_type t, medical_risk m, patient p,(SELECT DISTINCT trunc(months_between(sysdate, p.birth_day)/12) AS age FROM patient p) where age >= m.alarming_age AND m.medical_type = t.type_id")
-	except cx.DatabaseError as exc:
-		error, = exc.args
-		print( sys.stderr, "Oracle code:", error.code)
-		print( sys.stderr, "Oracle message:", error.message):
+		try:
+			curs.execute("DROP VIEW 	medical_risk;\
+				CREATE VIEW	medical_risk(medical_type, abnormal_rate, alarming_age) AS\
+				SELECT 		m1.type_id, ab_rate, min(m1.age)\
+				FROM		(SELECT 	t1.type_id, COUNT(DISTINCT t1.patient_no)/COUNT(DISTINCT t2.patient_no) AS ab_rate\
+							FROM		test_record t1, test_record t2\
+							WHERE		t1.result <> 'normal'\
+										AND t1.type_id = t2.type_id\
+							GROUP BY	t1.type_id) rate,\
+							(SELECT		t.type_id, age, COUNT(DISTINCT p.health_care_no) AS abnormal\
+							FROM		test_record t, patient p, (SELECT DISTINCT floor(abs(sysdate-p.birth_day)/365) AS age FROM patient p)\
+							WHERE		floor(abs(sysdate-p.birth_day)/365) >= age\
+										AND t.patient_no = p.health_care_no\
+										AND t.result <> 'normal'\
+							GROUP BY 	age, t.type_id) m1,\
+							(SELECT		t.type_id, age, COUNT(DISTINCT p.health_care_no) AS total\
+							FROM		test_record t, patient p, (SELECT DISTINCT floor(abs(sysdate-p.birth_day)/365) AS age FROM patient p)\
+							WHERE		floor(abs(sysdate-p.birth_day)/365) >= age\
+										AND t.patient_no = p.health_care_no\
+							GROUP BY 	age, t.type_id) m2 \
+				WHERE		m1.age = m2.age\
+							AND m1.type_id = m2.type_id\
+							AND m1.type_id = rate.type_id\
+							AND m1.abnormal/m2.total >= 2*rate.ab_rate\
+				GROUP BY 	m1.type_id, rate.ab_rate;")
+			curs.execute("SELECT p.health_care_no, p.name, p.address, p.phone FROM test_type t, medical_risk m, patient p,(SELECT DISTINCT trunc(months_between(sysdate, p.birth_day)/12) AS age FROM patient p) where age >= m.alarming_age AND m.medical_type = t.type_id")
+		except cx.DatabaseError as exc:
+			error, = exc.args
+			print( sys.stderr, "Oracle code:", error.code)
+			print( sys.stderr, "Oracle message:", error.message)
 
-	rows = curs.fetchall()
-	if len(rows) < 1:
-		print("No information available for Doctor " + " between " + startDate " and " + endDate)
-	else:
-		for i in rows:
-			print(i)
+		rows = curs.fetchall()
+		if len(rows) < 1:
+			print("No information available for Doctor " + " between " + startDate + " and " + endDate)
+		else:
+			for i in rows:
+				print(i)
+
+		menuChoice = str(input("Search again? (Y/N)")).lower()
+		if menuChoice = 'y':
+			continue
+		else:
+			curs.close()
+			return
 
 def searchEngine(con):
 
