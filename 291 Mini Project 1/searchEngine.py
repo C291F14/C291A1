@@ -1,5 +1,8 @@
 # Search Engine by Aaron Tse
 
+import cx_Oracle as cx
+import sys
+
 def searchByPatient(con):
 
 	curs = con.cursor()
@@ -19,18 +22,18 @@ def searchByPatient(con):
 			continue
 
 		if patientType == "health_care_no":
-			identifier = str(input("Enter Patient Health Care Number"))
+			identifier = str(input("Enter Patient Health Care Number "))
 			try:
-				curs.execute("SELECT p.health_care_no, p.name, t.test_name, r.test_date, r.result FROM patient p, test_record r, test_type t WHERE p.health_care_no = :identifier AND p.health_care_no = r.patient_no AND t.type_id = r.type_id", {"identifier": identifier})
+				curs.execute("""SELECT p.health_care_no, p.name, t.test_name, r.test_date, r.result FROM patient p, test_record r, test_type t WHERE p.health_care_no = :identifier AND p.health_care_no = r.patient_no AND t.type_id = r.type_id""", {"identifier": identifier})
 			except cx.DatabaseError as exc:
 				error, = exc.args
 				print( sys.stderr, "Oracle code:", error.code)
 				print( sys.stderr, "Oracle message:", error.message)
 
-		elif patientType == "patientName":
-			identifier = str(input("Enter Patient Name"))
+		elif patientType == "patient_name":
+			identifier = str(input("Enter Patient Name "))
 			try:
-				curs.execute("SELECT p.health_care_no, p.name, t.test_name, r.test_date, r.result FROM patient p, test_record r, test_type t WHERE p.name = :identifier AND p.health_care_no = r.patient_no AND t.type_id = r.type_id", {"identifier": identifier})
+				curs.execute("""SELECT p.health_care_no, p.name, t.test_name, r.test_date, r.result FROM patient p, test_record r, test_type t WHERE p.name = :identifier AND p.health_care_no = r.patient_no AND t.type_id = r.type_id""", {"identifier": identifier})
 			except cx.DatabaseError as exc:
 				error, = exc.args
 				print( sys.stderr, "Oracle code:", error.code)
@@ -49,35 +52,6 @@ def searchByDoctor(con):
 
 	while True:
 
-		menuChoice = str(input("Please select an option:\n 1 - Enter Doctor Employee Number\n 2 - Enter Doctor Name\n 3 - Exit to Main Menu\n"))
-
-		if menuChoice == "1":
-			searchType = "employee_no"
-		elif menuChoice == "2":
-			searchType = "doctor_name"
-		elif menuChoice == "3":
-			curs.close()
-			return
-		else:
-			print("Invalid Input, Please Try Again")
-
-		if searchType == "employee_no":
-			identifier = str(input("Enter Doctor Employee Number"))
-			try:
-				curs.execute("SELECT p.health_care_no, p.name, t.test_name, r.prescribe_date FROM patient p, test_type t, test_record r, doctor d WHERE r.employee_no = d.employee_no AND d.employee_no = :identifier AND p.health_care_no = r.patient_no AND t.type_id = r.type_id AND r.prescribe_date <= :endDate AND r.prescribe_date >= :startDate", {"endDate": endDate, "startDate" : startDate, "identifier": identifier})
-			except cx.DatabaseError as exc:
-				error, = exc.args
-				print( sys.stderr, "Oracle code:", error.code)
-				print( sys.stderr, "Oracle message:", error.message)
-		elif searchType == "doctor_name":
-			identifier = str(input("Enter Doctor Name"))
-			try:
-				curs.execute("SELECT p.health_care_no, p.name, t.test_name, r.prescribe_date FROM patient p1, patient p2, test_type t, test_record r, doctor d WHERE r.employee_no = d.employee_no AND d.health_care_no = p2.health_care_no AND p2.name = :identifier AND p1.health_care_no = r.patient_no AND t.type_id = r.type_id AND r.prescribe_date <= :endDate AND r.prescribe_date >= :startDate", {"endDate": endDate, "startDate" : startDate, "identifier": identifier})
-			except cx.DatabaseError as exc:
-				error, = exc.args
-				print( sys.stderr, "Oracle code:", error.code)
-				print( sys.stderr, "Oracle message:", error.message)
-
 		while True:
 
 			startDate = str(input("Enter a Start Date (YYYY-MM-DD): ")).strip()
@@ -94,6 +68,36 @@ def searchByDoctor(con):
 			else:
 				break
 
+		menuChoice = str(input("Please select an option:\n 1 - Enter Doctor Employee Number\n 2 - Enter Doctor Name\n 3 - Exit to Main Menu\n"))
+
+		if menuChoice == "1":
+			searchType = "employee_no"
+		elif menuChoice == "2":
+			searchType = "doctor_name"
+		elif menuChoice == "3":
+			curs.close()
+			return
+		else:
+			print("Invalid Input, Please Try Again")
+
+		if searchType == "employee_no":
+			identifier = str(input("Enter Doctor Employee Number "))
+			try:
+				curs.execute("""SELECT p.health_care_no, p.name, t.test_name, r.prescribe_date FROM patient p, test_type t, test_record r, doctor d WHERE r.employee_no = d.employee_no AND d.employee_no = :identifier AND p.health_care_no = r.patient_no AND t.type_id = r.type_id AND r.prescribe_date <= :endDate AND r.prescribe_date >= :startDate""", {"endDate": endDate, "startDate" : startDate, "identifier": identifier})
+			except cx.DatabaseError as exc:
+				error, = exc.args
+				print( sys.stderr, "Oracle code:", error.code)
+				print( sys.stderr, "Oracle message:", error.message)
+				print( "invalid doctor name")
+		elif searchType == "doctor_name":
+			identifier = str(input("Enter Doctor Name "))
+			try:
+				curs.execute("""SELECT p.health_care_no, p.name, t.test_name, r.prescribe_date FROM patient p1, patient p2, test_type t, test_record r, doctor d WHERE r.employee_no = d.employee_no AND d.health_care_no = p2.health_care_no AND p2.name = :identifier AND p1.health_care_no = r.patient_no AND t.type_id = r.type_id AND r.prescribe_date <= :endDate AND r.prescribe_date >= :startDate""", {"endDate": endDate, "startDate" : startDate, "identifier": identifier})
+			except cx.DatabaseError as exc:
+				error, = exc.args
+				print( sys.stderr, "Oracle code:", error.code)
+				print( sys.stderr, "Oracle message:", error.message)
+
 		rows = curs.fetchall()
 		if len(rows) < 1:
 			print("No information available for Doctor " + " between " + startDate + " and " + endDate)
@@ -108,7 +112,7 @@ def searchAlarmingAge(con):
 	while True:
 
 		try:
-			curs.execute("DROP VIEW 	medical_risk;\
+			curs.execute("""DROP VIEW 	medical_risk;\
 				CREATE VIEW	medical_risk(medical_type, abnormal_rate, alarming_age) AS\
 				SELECT 		m1.type_id, ab_rate, min(m1.age)\
 				FROM		(SELECT 	t1.type_id, COUNT(DISTINCT t1.patient_no)/COUNT(DISTINCT t2.patient_no) AS ab_rate\
@@ -131,8 +135,9 @@ def searchAlarmingAge(con):
 							AND m1.type_id = m2.type_id\
 							AND m1.type_id = rate.type_id\
 							AND m1.abnormal/m2.total >= 2*rate.ab_rate\
-				GROUP BY 	m1.type_id, rate.ab_rate;")
-			curs.execute("SELECT p.health_care_no, p.name, p.address, p.phone FROM test_type t, medical_risk m, patient p,(SELECT DISTINCT trunc(months_between(sysdate, p.birth_day)/12) AS age FROM patient p) where age >= m.alarming_age AND m.medical_type = t.type_id")
+				GROUP BY 	m1.type_id, rate.ab_rate;""")
+			print("table creation success")
+			curs.execute("""SELECT p.health_care_no, p.name, p.address, p.phone FROM test_type t, medical_risk m, patient p,(SELECT DISTINCT trunc(months_between(sysdate, p.birth_day)/12) AS age FROM patient p) where age >= m.alarming_age AND m.medical_type = t.type_id""")
 		except cx.DatabaseError as exc:
 			error, = exc.args
 			print( sys.stderr, "Oracle code:", error.code)
@@ -146,7 +151,7 @@ def searchAlarmingAge(con):
 				print(i)
 
 		menuChoice = str(input("Search again? (Y/N)")).lower()
-		if menuChoice = 'y':
+		if menuChoice == 'y':
 			continue
 		else:
 			curs.close()

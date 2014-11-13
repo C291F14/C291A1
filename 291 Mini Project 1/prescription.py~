@@ -83,13 +83,6 @@ def more_input(con, EmployeeNumber):
                             # rows2 = [(health_care_no, type_id), (health_care_no, type_id), (health_care_no, type_id), ...]
                             rows2 = curs2.fetchall()
 
-                        except cx.DatabaseError as exc:
-                            error, = exc.args
-                            print( sys.stderr, "Oracle code:", error.code)
-                            print( sys.stderr, "Oracle message:", error.message)
-                            print("Error, could not access data\n")
-                        
-                        else: 
                             if NotAllowedCheck in rows2:
                                 print("Not Allowed to Take Test!\n")
                             else:
@@ -97,11 +90,25 @@ def more_input(con, EmployeeNumber):
                                 insert_row(rows1, EmployeeNumber, HealthCareNumber, con);
                                 #break
 
+                        except cx.DatabaseError as exc:
+                            error, = exc.args
+                            print( sys.stderr, "Oracle code:", error.code)
+                            print( sys.stderr, "Oracle message:", error.message)
+                            print("Error, could not access data\n")
+                        
+     #                   else: 
+      #                      if NotAllowedCheck in rows2:
+       #                         print("Not Allowed to Take Test!\n")
+        #                    else:
+         #                       print("Allowed to Take Test!\n")
+          #                      insert_row(rows1, EmployeeNumber, HealthCareNumber, con);
+                                #break
+
                 except cx.DatabaseError as exc:
                     error, = exc.args
                     print( sys.stderr, "Oracle code:", error.code)
                     print( sys.stderr, "Oracle message:", error.message)
-                    print("Error, Could not access data\n")
+                    print("Error, Could not access database\n")
 
             elif P1menuChoice == "2":
                 curs1.close()
@@ -122,6 +129,7 @@ def more_input(con, EmployeeNumber):
 # Called to insert a row of information into 'test_record' table
 def insert_row(TypeId, EmployeeNumber, HealthCareNumber, con):
 
+	print("inserting row")
     # Getting the prescription date and converting it to be read by SQL.
     PrescribeDate = time.strftime("%Y/%m/%d")
 
